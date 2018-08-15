@@ -2,14 +2,21 @@
 
 # Imputation for Forecasting with Censored Data
 
-Most time series forecasting methods assume the observed data is uncensored. However, censored data can arise in many real life processes. For example, a business might wish to forecast the sales of a certain (physical) product using the sales history. However, if the product was out of stock for period of time, the sales history would have been censored. In this example, proceeding with the usual forecasting method will likely lead to an under-prediction of the true future sales.
+Most time series forecasting methods assume the observed data is uncensored. However, censored data can arise in many real life processes. For example, a business might wish to forecast the sales of a certain (physical) product using the sales history. However, if the product was out of stock for period of time, the sales history would have been capped (censored). In this example, proceeding with the usual forecasting method will likely lead to an under-prediction of the true future sales.
 
 Most existing literature on the topic concerns fitting the time series model while accounting for data censorship. As we will explain below, we think imputation only approach is under-researched and under-valued.
 
 ## Current state of research
 
+<<<<<<< HEAD
 #### Park et. al. (2007)
 Park et. al. (2007) proposed an iterative scheme. First, the time series data is assumed to follow a multivariate gaussian distribution. Therefore, the censored portion of the time series could be imputed using the appropriate conditional distribution. Next, the parameters of the distribution are re-estimated. This process is repeated until convergence is reached.
+=======
+With this in mind, the aim of this project is to,
+- evaluate the current state of research,
+- identify any area of potential advancement in forecasting methodology, and make contribution that is both theoretically sound and business-applicable,
+- subject to research progress, develop software packages to share the result with the wider data analytics communities.
+>>>>>>> af207f7984796b2f2380720dc57a37ce1a770e31
 
 #### Wang and Chan (2017)
 Wang and Chan (2017) studied AR models with exogenous variables and censoring. They assumed the score of the most recent uncensored data block, and its expectation givens the censored data has a closed form expression. Then, exploiting the fact that scores have zero mean, they form a set of estimating equations for the model parameters.
