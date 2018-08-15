@@ -8,15 +8,9 @@ Most existing literature on the topic concerns fitting the time series model whi
 
 ## Current state of research
 
-<<<<<<< HEAD
+
 #### Park et. al. (2007)
 Park et. al. (2007) proposed an iterative scheme. First, the time series data is assumed to follow a multivariate gaussian distribution. Therefore, the censored portion of the time series could be imputed using the appropriate conditional distribution. Next, the parameters of the distribution are re-estimated. This process is repeated until convergence is reached.
-=======
-With this in mind, the aim of this project is to,
-- evaluate the current state of research,
-- identify any area of potential advancement in forecasting methodology, and make contribution that is both theoretically sound and business-applicable,
-- subject to research progress, develop software packages to share the result with the wider data analytics communities.
->>>>>>> af207f7984796b2f2380720dc57a37ce1a770e31
 
 #### Wang and Chan (2017)
 Wang and Chan (2017) studied AR models with exogenous variables and censoring. They assumed the score of the most recent uncensored data block, and its expectation givens the censored data has a closed form expression. Then, exploiting the fact that scores have zero mean, they form a set of estimating equations for the model parameters.
