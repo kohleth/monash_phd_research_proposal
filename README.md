@@ -1,13 +1,10 @@
 # Monash PhD Research Proposal
 
-# Imputation for Forecasting with Censored Data
+# Censored Time Series Forecasting using State-Space Models
 
-Most time series forecasting methods assume the observed data is uncensored. However, censored data can arise in many real life processes. For example, a business might wish to forecast the sales of a certain (physical) product using the sales history. However, if the product was out of stock for period of time, the sales history would have been capped (censored). In this example, proceeding with the usual forecasting method will likely lead to an under-prediction of the true future sales.
-
-Most existing literature on the topic concerns fitting the time series model while accounting for data censorship. As we will explain below, we think imputation only approach is under-researched and under-valued.
+Most time series forecasting methods assume the observed data is uncensored. However, censored data can arise in many real life processes. For example, a business might wish to forecast the sales of a certain (physical) product using the sales history. However, if the product was out of stock for period of time, the sales history would have been capped (censored). In this example, proceeding with the usual forecasting method will likely lead to an under-prediction of the true future sales. This calls for method to model the time series which account for data censorship.
 
 ## Current state of research
-
 
 #### Park et. al. (2007)
 Park et. al. (2007) proposed an iterative scheme. First, the time series data is assumed to follow a multivariate gaussian distribution. Therefore, the censored portion of the time series could be imputed using the appropriate conditional distribution. Next, the parameters of the distribution are re-estimated. This process is repeated until convergence is reached.
@@ -19,43 +16,120 @@ Wang and Chan (2017) studied AR models with exogenous variables and censoring. T
 Schumacher et. al. (2017) considered the same AR models with exogenous regressors and censoring. They used the EM algorithm to maximize the complete likelihood of both the observed data and the censoring indicator. To circumvent the difficulty in calculating the expectation, they approximate it using simulated data.
 
 ## Research Gap
-As can be seen, current research mostly starts from a generative model assumption, and typically considers ARMA type models. As a result, most energy is spent on estimating model parameters and circumventing the algebraic challenge the parametric models pose.
+As can be seen, current research mostly tackle the problem of parameter estimation in the presence of censored data, and they typically work directly with the ARIMA(X) model and pay little attention to the censoring mechanism.
 
-There are (at least) 3 related reasons why a different approach could add value.
+We wish to approach this problem with three distinctive differences.
 
 #### 1. Forecast first
-In many situations, it is the forecast, instead of model parameters, that is of primary interest. In other words, instead of adjusting the model parameters (by tackling a generally difficult parametric problem), it is more direct to adjust the forecast directly. The potential disadvantage of this approach is that traditional statistical inference might become impossible to conduct, but again in many situations such inferences is not of interest.
+In many situations, it is the forecast, instead of model parameters, that is of primary interest. Therefore, we think we should shift the effort from adjusting parameter estimates to adjusting forecast (or the time series) directly.
 
-#### 2. Broader class of models
-Gaussian models with ARMA type error have been the focus of research due to their albegra being easier to handle. However, if we were to forgo this distributional framework and the benefit it brings (such as the ability to conduct statistical inferences), we could cater for a much wider class of models (ets, gam, even machine learning type models).
+#### 2. Imputation methods
+In addition to developing a full solution which forecasts in the presence of data censorship, it can be useful to develop an imputation only method. That is, a model that simply adjust the past censored data, so that the data analyst / statistician can proceed the modelling with the standard uncensored approach.
 
-#### 3. The value of Imputation only approach
-We believe imputation (only) approach is under-researched and under-valued.
+#### 3. State-Space Models
+Data censorship can be modeled quite naturally if we adopt a state-space approach. In addition, both the imputation and forecast can be obtained quite naturally using sequential filtering, forecasting, and smoothing techniques that are well developed in the state-space literature.
 
-**Under-Researched:**
-Most imputation method we see starts from a generative model, from there the conditional distribution of the censored portion given the observed data is computed / approximated, before imputation is finally made. However, if we forgo the distributional framework (for reasons discussed above), there is no reason why curve/shape-based methods (e.g. splines) could not be used.
+## Proposed Models
+Let $\theta$, $X_t$, and $Z_t$ be the model parameters, process value, and observed value (i.e. data) at time $t$ respectively. Further denote $\Omega_t$ to be the history of observation until time $t$, that is $\Omega_t=\{Z_i\}_{i=1\ldots t}$.
 
-**Under-Valued:**
- This is an argument concerning real applied practices. While theory would probably suggest that making model predictions after imputation is statistically less efficient than direct estimation / prediction accounting for the censorship, in practice, a standalone (modularized) imputation step often means the analyst will be able to connect this step with the other analysis pipeline. For example, suppose an analyst wish to use a pre-determined model, or a model for which no censored data version has been developed, a standalone imputation step would allow the desired model to be used. And this need not limit to model choice. Suppose an analyst wish to use a well-developed, well-test, and feature-rich (e.g. plotting) software package for the time series analysis, but again censored data is not catered for. A standalone imputation step would allow the analyst to enjoy both better forecast, as well as the full range of features offered by the package.
+If we assume a full Bayesian approach, we can assign distributional assumption to all components. Then the full model of everything, given what we have observed is
+\[
+  [Z_t, X_t, \theta | \Omega_{t-1}]
+\]
+where $[.]$ denotes a distribution.
+
+This full distribution can be broken down into
+\[
+  [Z_t, X_t, \theta | \Omega_{t-1}]
+  =[Z_t|X_t, \theta, \Omega_{t-1}]
+  [X_t|\theta, \Omega_{t-1}]
+  [\theta|\Omega_{t-1}]
+\]
+
+where the 3 components on the RHS of the equations are the *data model*, *process model*, and *parameter model* respectively. We largely borrow this framework from Cressie & Wikle (2011).
+
+#### Parameter model
+If we don't want a fully Bayesian approach, we can simply replace the parameter model with some form of a plug-in estimate of $\theta$. Otherwise, it can come from some standard prior distribution.
+
+#### Process model
+This can be the standard uncensored model such as ARIMAX.
+
+#### Data model
+This is where we model the censorship. But the formulation is highly problem-specific. In the case of inventory/ demand / sales forecasting, which is what we are interested in, $X_t$ can be the real demand, and $Z_t$ be the actual sales. Formulated this way, the Data model could simply be
+\[
+  [Z_t|X_t, \theta, \Omega_{t-1}]=\min(X_t, C)
+\]
+where $C\in \theta$ (the right censoring limit) is some constant physical constraint such as shelf space limit.
+
+We could extend this model further, for example, instead of a constant $C$, we might have $C_t$ which represents the available stock at time $t$. And then
+\[
+  C_t=C_0-Z_1-Z_2-\ldots-Z_{t-1}
+\]
+where $C_0$ denotes some initial stock level.
+
+We could further introduce other complication such as random stock loss due to theft or write-off:
+\[
+  [Z_t|X_t, \theta, \Omega_{t-1}]=\min(X_t, \phi C)
+\]
+
+Or perhaps the case when not all demand is fulfilled,
+\[
+  [Z_t|X_t, \theta, \Omega_{t-1}]=\min(\psi X_t, \phi C)
+\]
+
+where $\phi,\psi \in \theta$ and $\phi, \psi \in [0,1]$.
+
+This is just a sample of possible extension. The potential is great.
+
+### Forecasting (and Filtering)
+With the model formulated, we can use the typical technique adopted in the state-space models, which is to do the forecast sequentially.
+
+For example, for notational simplicity, suppose the process model is AR(1).
+
+Then the Forecasting distribution becomes
+\[
+  [Y_t|\Omega_{t-1}]=\int{[Y_t|Y_{t-1}][Y_{t-1}|\Omega_{t-1}]}dY_{t-1}
+\]
+The first component in the integral is the AR(1) distribution, whereas the second component is the Filtering distribution, where
+\[
+  [Y_{t}|\Omega_t] \propto [Z_t|Y_t][Y_t|\Omega_{t-1}]
+\]
+because of Bayes' Theorem.
+
+This means, assuming we have some starting value $[Z_0, Y_0]$, we can sequentially compute the Filtering distribution and thus the Forecasting distribution.
+
+### Imputation (Smoothing)
+The imputation can likewise be done sequentially. The imputation step is just the smoothing step, and its distribution at time $t\leq T$ is
+\[
+  [Y_t|\Omega_T]=\int{[Y_t|Y_{t+1},\Omega_T][Y_{t+1}|\Omega_T]}dY_{t+1}
+\]
+where
+\[
+  [Y_t|Y_{t+1},\Omega_T]=[Y_t|Y_{t+1},\Omega_t]
+  \propto [Y_{t+1}|Y_t][Y_t|\Omega_t]
+\]
+where the right-most relationship holds because again of Bayes' Theorem.
+
+This means, again, starting from the end of time $T$, we can sequentially obtain the Imputation (Smoothing) distribution by doing filtering and applying the process model.
+
+### Computation
+Since our Data model is non-linear, it is likely that we will have to go down the simulation path. We could use Approximate Bayesian Computation to facilitate this step.
 
 
 ## Research Plan
 1. Review literature on
     - Time series forecasting
-    - Censored data modeling
-    - Missing data modeling
-2. Develop a systematic understanding of the relationship between censored data and missing data, and their implication to time series forecasting models.
-    - Missing data can be treated as censoring with infinite censoring region. In some situation, they go hand in hand. E.g. store running out of stock -- during the last week before stock completely runs out, the sales data is likely censored (capped). Then during the following weeks, before replenishment happens, the sales data will be missing (or capped at zero).
-    - Many similar studies tend to consider the case when censoring is due to the machine's detection limit. We wish to study the case when censoring is due to inherent limitation of the physical process (e.g. store run out of stock), and how, if at all, such censoring mechanism affects the time series differently to the machine detection limit case.
-3. Develop model agnostic imputation method of censored time series. Specifically,
-    - Develop criteria to assess the goodness of the imputation with a strong focus on its impact on forecast (distributional) accuracy.
-    - Develop shape-based / non-parametric times series imputation method (e.g. splines / kernel / wavelets). But instead of the standard methods, we will incorporate the censoring information into the imputation. That is, the imputed portion must lie on the censored side of the censored value. (e.g. for left-censoring with censored region $(-\infty,c)$, the imputed value $\hat{y}$ should be no greater than $c$.)
-    - Develop pooling strength type imputation method. This is applicable to cases when we observe multiple related time series (e.g. sales of the same product at multiple stores, or sales of similar products at the same store), some of which is censored. The aim is to develop some form of nearest neighbour or regression/correlation model to impute the data. This section can borrow strongly from the missing data imputation literature.
-    - Compare these imputation methods with existing ones using both simulated data and real data.
+    - Censored / Missing data modeling
+    - State-Space models
+    - Approximate Bayesian Computation
+2. Develop computation algorithms with basic parameter, process, and data models.
+3. Examine model assessment techniques under data censorship.
+4. Further develop / extend models to cater for more realistic settings.
 5. Subject to progress of previous steps, develop software package to implement the developed methods.
-    - This package should have a strong view of enabling connection with other time series modeling pipeline.
 
 ## Bibliography
+Cressie, N. and Wikle, C. (2011). *Statistics for Spatio-Temporal Data*. Hoboken, N.J.: Wiley.
+
 Park, J., Genton, M., & Ghosh, S. (2007). Censored time series analysis with autoregressive moving average models. *Canadian Journal Of Statistics*, 35(1), 151-168. doi: 10.1002/cjs.5550350113
 
 Schumacher, F., Lachos, V., & Dey, D. (2017). Censored regression models with autoregressive errors: A likelihood-based perspective. *Canadian Journal Of Statistics*, 45(4), 375-392. doi: 10.1002/cjs.11338
