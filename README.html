@@ -218,10 +218,23 @@ $(document).ready(function () {
 \]</span> where the right-most relationship holds because again of Bayes’ Theorem.</p>
 <p>This means, again, starting from the end of time <span class="math inline">\(T\)</span>, we can sequentially obtain the Imputation (Smoothing) distribution by doing filtering and applying the process model.</p>
 </div>
-<div id="computation" class="section level3">
-<h3>Computation</h3>
+</div>
+<div id="computation" class="section level2">
+<h2>Computation</h2>
 <p>Since our Data model is non-linear, it is likely that we will have to go down the simulation path. We could use Approximate Bayesian Computation to facilitate this step.</p>
 </div>
+<div id="forecast-evaluation" class="section level2">
+<h2>Forecast evaluation</h2>
+<p>We focus on probabilistic scoring rule, specifically the Continuous Ranked Probability Score (CRPS).</p>
+<p>For the data forecast, the score between forecast distribution <span class="math inline">\(\hat{F}_{Z_t}\)</span> and observation <span class="math inline">\(z_t\)</span> is <span class="math display">\[
+  \text{CRPS}(\hat{F}_{Z_t},z_t)=\int_{-\infty}^\infty\left( \hat{F}_{Z_t}(u)-\mathbb{1}(u\geq z_t)\right)^2du
+\]</span> where <span class="math inline">\(\mathbb{1}\)</span> is the indicator function.</p>
+<p>For the process variable forecast, the CRPS is likewise <span class="math display">\[
+  \int_{-\infty}^\infty\left( \hat{F}_{X_t}(u)-\mathbb{1}(u\geq x_t)\right)^2du
+\]</span> except that we do not observe <span class="math inline">\(x_t\)</span>.</p>
+<p>However, in our context where <span class="math inline">\(Z=\min(X,C)\)</span>, we have <span class="math inline">\(x_t=z_t\)</span> whenever <span class="math inline">\(z_t\leq C\)</span>, and thus <span class="math inline">\(F_{X_t}(u)=F_{Z_t}(u)\)</span> whenever <span class="math inline">\(u\leq C\)</span>. This last relationship motivates us to replace <span class="math inline">\(\mathbb{1}(u\geq x_t)\)</span> with <span class="math inline">\(\mathbb{1}(u\geq z_t)\)</span> in the region where <span class="math inline">\(u\leq C\)</span>. So we can modify CRPS to be <span class="math display">\[
+  \text{CRPS}(\hat{F}_{X_t},x_t)=\int_{-\infty}^C\left( \hat{F}_{X_t}(u)-\mathbb{1}(u\geq z_t)\right)^2du
+\]</span> And <span class="math inline">\(C\)</span> can be replaced by <span class="math inline">\(C_t\)</span> or <span class="math inline">\(\phi C_t\)</span> depending on the Data model.</p>
 </div>
 <div id="application" class="section level2">
 <h2>Application</h2>

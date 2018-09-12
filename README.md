@@ -112,9 +112,29 @@ where the right-most relationship holds because again of Bayes' Theorem.
 
 This means, again, starting from the end of time $T$, we can sequentially obtain the Imputation (Smoothing) distribution by doing filtering and applying the process model.
 
-### Computation
+## Computation
 Since our Data model is non-linear, it is likely that we will have to go down the simulation path. We could use Approximate Bayesian Computation to facilitate this step.
 
+## Forecast evaluation
+We focus on probabilistic scoring rule, specifically the Continuous Ranked Probability Score (CRPS).
+
+For the data forecast, the score between forecast distribution $\hat{F}_{Z_t}$ and observation $z_t$ is
+\[
+  \text{CRPS}(\hat{F}_{Z_t},z_t)=\int_{-\infty}^\infty\left( \hat{F}_{Z_t}(u)-\mathbb{1}(u\geq z_t)\right)^2du
+\]
+where $\mathbb{1}$ is the indicator function.
+
+For the process variable forecast, the CRPS is likewise
+\[
+  \int_{-\infty}^\infty\left( \hat{F}_{X_t}(u)-\mathbb{1}(u\geq x_t)\right)^2du
+\]
+except that we do not observe $x_t$.
+
+However, in our context where $Z=\min(X,C)$, we have $x_t=z_t$ whenever $z_t\leq C$, and thus $F_{X_t}(u)=F_{Z_t}(u)$ whenever $u\leq C$. This last relationship motivates us to replace $\mathbb{1}(u\geq x_t)$ with $\mathbb{1}(u\geq z_t)$ in the region where $u\leq C$. So we can modify CRPS to be
+\[
+  \text{CRPS}(\hat{F}_{X_t},x_t)=\int_{-\infty}^C\left( \hat{F}_{X_t}(u)-\mathbb{1}(u\geq z_t)\right)^2du
+\]
+And $C$ can be replaced by $C_t$ or $\phi C_t$ depending on the Data model.
 
 ## Application
 As demonstrated above, the formulation for state-space models are typically high problem-specific. In this research, we chiefly aim to develop practical forecasting solution for sales / demand data.
