@@ -182,7 +182,7 @@ $(document).ready(function () {
 </div>
 <div id="data-model" class="section level4">
 <h4>Data model</h4>
-<p>This is where we model the censorship. But the formulation is highly problem-specific. In the case of inventory/ demand / sales forecasting, which is what we are interested in, <span class="math inline">\(X_t\)</span> can be the real demand, and <span class="math inline">\(Z_t\)</span> be the actual sales. Formulated this way, the Data model could simply be <span class="math display">\[
+<p>This is where we model the censorship. But the formulation is highly problem-specific. In the case of sales / demand forecasting, which is what we are interested in, <span class="math inline">\(X_t\)</span> can be the real demand, and <span class="math inline">\(Z_t\)</span> be the actual sales. Formulated this way, the Data model could simply be <span class="math display">\[
   [Z_t|X_t, \theta, \Omega_{t-1}]=\min(X_t, C)
 \]</span> where <span class="math inline">\(C\in \theta\)</span> (the right censoring limit) is some constant physical constraint such as shelf space limit.</p>
 <p>We could extend this model further, for example, instead of a constant <span class="math inline">\(C\)</span>, we might have <span class="math inline">\(C_t\)</span> which represents the available stock at time <span class="math inline">\(t\)</span>. And then <span class="math display">\[
@@ -202,19 +202,19 @@ $(document).ready(function () {
 <p>With the model formulated, we can use the typical technique adopted in the state-space models, which is to do the forecast sequentially.</p>
 <p>For example, for notational simplicity, suppose the process model is AR(1).</p>
 <p>Then the Forecasting distribution becomes <span class="math display">\[
-  [Y_t|\Omega_{t-1}]=\int{[Y_t|Y_{t-1}][Y_{t-1}|\Omega_{t-1}]}dY_{t-1}
+  [X_t|\Omega_{t-1}]=\int{[X_t|X_{t-1}][X_{t-1}|\Omega_{t-1}]}dX_{t-1}
 \]</span> The first component in the integral is the AR(1) distribution, whereas the second component is the Filtering distribution, where <span class="math display">\[
-  [Y_{t}|\Omega_t] \propto [Z_t|Y_t][Y_t|\Omega_{t-1}]
+  [X_t|\Omega_t] \propto [Z_t|X_t][X_t|\Omega_{t-1}]
 \]</span> because of Bayes’ Theorem.</p>
-<p>This means, assuming we have some starting value <span class="math inline">\([Z_0, Y_0]\)</span>, we can sequentially compute the Filtering distribution and thus the Forecasting distribution.</p>
+<p>This means, assuming we have some starting value <span class="math inline">\([Z_0, X_0]\)</span>, we can sequentially compute the Filtering distribution and thus the Forecasting distribution.</p>
 </div>
 <div id="imputation-smoothing" class="section level3">
 <h3>Imputation (Smoothing)</h3>
 <p>The imputation can likewise be done sequentially. The imputation step is just the smoothing step, and its distribution at time <span class="math inline">\(t\leq T\)</span> is <span class="math display">\[
-  [Y_t|\Omega_T]=\int{[Y_t|Y_{t+1},\Omega_T][Y_{t+1}|\Omega_T]}dY_{t+1}
+  [X_t|\Omega_T]=\int{[X_t|X_{t+1},\Omega_T][X_{t+1}|\Omega_T]}dX_{t+1}
 \]</span> where <span class="math display">\[
-  [Y_t|Y_{t+1},\Omega_T]=[Y_t|Y_{t+1},\Omega_t]
-  \propto [Y_{t+1}|Y_t][Y_t|\Omega_t]
+  [X_t|X_{t+1},\Omega_T]=[X_t|X_{t+1},\Omega_t]
+  \propto [X_{t+1}|X_t][X_t|\Omega_t]
 \]</span> where the right-most relationship holds because again of Bayes’ Theorem.</p>
 <p>This means, again, starting from the end of time <span class="math inline">\(T\)</span>, we can sequentially obtain the Imputation (Smoothing) distribution by doing filtering and applying the process model.</p>
 </div>
@@ -222,6 +222,11 @@ $(document).ready(function () {
 <h3>Computation</h3>
 <p>Since our Data model is non-linear, it is likely that we will have to go down the simulation path. We could use Approximate Bayesian Computation to facilitate this step.</p>
 </div>
+</div>
+<div id="application" class="section level2">
+<h2>Application</h2>
+<p>As demonstrated above, the formulation for state-space models are typically high problem-specific. In this research, we chiefly aim to develop practical forecasting solution for sales / demand data.</p>
+<p>As such, we will try to obtain real sales data (where we know some data is censored) from a large national retailer, so that we can evaluate our solution in a real life situation.</p>
 </div>
 <div id="research-plan" class="section level2">
 <h2>Research Plan</h2>
@@ -234,7 +239,7 @@ $(document).ready(function () {
 <li>Approximate Bayesian Computation</li>
 </ul></li>
 <li>Develop computation algorithms with basic parameter, process, and data models.</li>
-<li>Examine model assessment techniques under data censorship.</li>
+<li>Develop forecast evaluation technique under data censorship.</li>
 <li>Further develop / extend models to cater for more realistic settings.</li>
 <li>Subject to progress of previous steps, develop software package to implement the developed methods.</li>
 </ol>

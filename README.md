@@ -55,7 +55,7 @@ If we don't want a fully Bayesian approach, we can simply replace the parameter 
 This can be the standard uncensored model such as ARIMAX.
 
 #### Data model
-This is where we model the censorship. But the formulation is highly problem-specific. In the case of inventory/ demand / sales forecasting, which is what we are interested in, $X_t$ can be the real demand, and $Z_t$ be the actual sales. Formulated this way, the Data model could simply be
+This is where we model the censorship. But the formulation is highly problem-specific. In the case of sales / demand forecasting, which is what we are interested in, $X_t$ can be the real demand, and $Z_t$ be the actual sales. Formulated this way, the Data model could simply be
 \[
   [Z_t|X_t, \theta, \Omega_{t-1}]=\min(X_t, C)
 \]
@@ -88,25 +88,25 @@ For example, for notational simplicity, suppose the process model is AR(1).
 
 Then the Forecasting distribution becomes
 \[
-  [Y_t|\Omega_{t-1}]=\int{[Y_t|Y_{t-1}][Y_{t-1}|\Omega_{t-1}]}dY_{t-1}
+  [X_t|\Omega_{t-1}]=\int{[X_t|X_{t-1}][X_{t-1}|\Omega_{t-1}]}dX_{t-1}
 \]
 The first component in the integral is the AR(1) distribution, whereas the second component is the Filtering distribution, where
 \[
-  [Y_{t}|\Omega_t] \propto [Z_t|Y_t][Y_t|\Omega_{t-1}]
+  [X_t|\Omega_t] \propto [Z_t|X_t][X_t|\Omega_{t-1}]
 \]
 because of Bayes' Theorem.
 
-This means, assuming we have some starting value $[Z_0, Y_0]$, we can sequentially compute the Filtering distribution and thus the Forecasting distribution.
+This means, assuming we have some starting value $[Z_0, X_0]$, we can sequentially compute the Filtering distribution and thus the Forecasting distribution.
 
 ### Imputation (Smoothing)
 The imputation can likewise be done sequentially. The imputation step is just the smoothing step, and its distribution at time $t\leq T$ is
 \[
-  [Y_t|\Omega_T]=\int{[Y_t|Y_{t+1},\Omega_T][Y_{t+1}|\Omega_T]}dY_{t+1}
+  [X_t|\Omega_T]=\int{[X_t|X_{t+1},\Omega_T][X_{t+1}|\Omega_T]}dX_{t+1}
 \]
 where
 \[
-  [Y_t|Y_{t+1},\Omega_T]=[Y_t|Y_{t+1},\Omega_t]
-  \propto [Y_{t+1}|Y_t][Y_t|\Omega_t]
+  [X_t|X_{t+1},\Omega_T]=[X_t|X_{t+1},\Omega_t]
+  \propto [X_{t+1}|X_t][X_t|\Omega_t]
 \]
 where the right-most relationship holds because again of Bayes' Theorem.
 
@@ -116,6 +116,13 @@ This means, again, starting from the end of time $T$, we can sequentially obtain
 Since our Data model is non-linear, it is likely that we will have to go down the simulation path. We could use Approximate Bayesian Computation to facilitate this step.
 
 
+## Application
+As demonstrated above, the formulation for state-space models are typically high problem-specific. In this research, we chiefly aim to develop practical forecasting solution for sales / demand data.
+
+As such, we will try to obtain real sales data (where we know some data is censored) from a large national retailer, so that we can evaluate our solution in a real life situation.
+
+
+
 ## Research Plan
 1. Review literature on
     - Time series forecasting
@@ -123,7 +130,7 @@ Since our Data model is non-linear, it is likely that we will have to go down th
     - State-Space models
     - Approximate Bayesian Computation
 2. Develop computation algorithms with basic parameter, process, and data models.
-3. Examine model assessment techniques under data censorship.
+3. Develop forecast evaluation technique under data censorship.
 4. Further develop / extend models to cater for more realistic settings.
 5. Subject to progress of previous steps, develop software package to implement the developed methods.
 
