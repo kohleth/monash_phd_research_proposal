@@ -2,12 +2,12 @@
 
 # Censored Time Series Forecasting using State-Space Models
 
-Most time series forecasting methods assume the observed data is uncensored. However, censored data can arise in many real life processes. For example, a business might wish to forecast the sales of a certain (physical) product using the sales history. However, if the product was out of stock for period of time, the sales history would have been capped (censored). In this example, proceeding with the usual forecasting method will likely lead to an under-prediction of the true future sales. This calls for method to model the time series which account for data censorship.
+Most time series forecasting methods assume the observed data is uncensored, that is, we observe the true value of the variable of interest. However, censored data can arise in many real life processes. For example, a business might wish to forecast the sales of a certain (physical) product using the sales history. However, if the product was out of stock for period of time, the sales history would have been capped (censored). In this example, proceeding with the usual forecasting method, thus treating the cesored value as the true value, will likely lead to an under-prediction of the true future sales. This calls for method to model the time series which account for this type of censored data.
 
 ## Current state of research
 
 #### Park et. al. (2007)
-Park et. al. (2007) proposed an iterative scheme. First, the time series data is assumed to follow a multivariate gaussian distribution. Therefore, the censored portion of the time series could be imputed using the appropriate conditional distribution. Next, the parameters of the distribution are re-estimated. This process is repeated until convergence is reached.
+Park et. al. (2007) proposed an iterative scheme to estimate the model parameters. First, the time series data is assumed to follow a multivariate gaussian distribution. Therefore, the censored portion of the time series could be imputed using the appropriate conditional distribution. Next, the parameters of the distribution are re-estimated. This process is repeated until convergence is reached.
 
 #### Wang and Chan (2017)
 Wang and Chan (2017) studied AR models with exogenous variables and censoring. They assumed the score of the most recent uncensored data block, and its expectation givens the censored data has a closed form expression. Then, exploiting the fact that scores have zero mean, they form a set of estimating equations for the model parameters.
@@ -21,13 +21,13 @@ As can be seen, current research mostly tackle the problem of parameter estimati
 We wish to approach this problem with three distinctive differences.
 
 #### 1. Forecast first
-In many situations, it is the forecast, instead of model parameters, that is of primary interest. Therefore, we think we should shift the effort from adjusting parameter estimates to adjusting forecast (or the time series) directly.
+In many situations, it is the forecast, instead of model parameters, that is of primary interest. Therefore, we think we should shift the effort from estimating parameters to making forecast directly, using censored data.
 
 #### 2. Imputation methods
 In addition to developing a full solution which forecasts in the presence of data censorship, it can be useful to develop an imputation only method. That is, a model that simply adjust the past censored data, so that the data analyst / statistician can proceed the modelling with the standard uncensored approach.
 
 #### 3. State-Space Models
-Data censorship can be modeled quite naturally if we adopt a state-space approach. In addition, both the imputation and forecast can be obtained quite naturally using sequential filtering, forecasting, and smoothing techniques that are well developed in the state-space literature.
+Data censorship can be modeled quite naturally if we adopt a state-space approach. In addition, both imputation (which becomes the problem of smoothing in this setting) and forecasting can be performed quite naturally using sequential filtering, forecasting, and smoothing techniques that are well developed in the state-space literature.
 
 ## Proposed Models
 Let $\theta$, $X_t$, and $Z_t$ be the model parameters, process value, and observed value (i.e. data) at time $t$ respectively. Further denote $\Omega_t$ to be the history of observation until time $t$, that is $\Omega_t=\{Z_i\}_{i=1\ldots t}$.
@@ -59,7 +59,7 @@ This is where we model the censorship. But the formulation is highly problem-spe
 \[
   [Z_t|X_t, \theta, \Omega_{t-1}]=\min(X_t, C)
 \]
-where $C\in \theta$ (the right censoring limit) is some constant physical constraint such as shelf space limit.
+where $C$ (the right censoring limit) is some constant physical constraint such as shelf space limit.
 
 We could extend this model further, for example, instead of a constant $C$, we might have $C_t$ which represents the available stock at time $t$. And then
 \[
