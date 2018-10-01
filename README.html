@@ -206,7 +206,7 @@ $(document).ready(function () {
 \]</span> The first component in the integral is the AR(1) distribution, whereas the second component is the Filtering distribution, where <span class="math display">\[
   [X_t|\Omega_t] \propto [Z_t|X_t][X_t|\Omega_{t-1}]
 \]</span> because of Bayes’ Theorem.</p>
-<p>This means, assuming we have a starting distribution <span class="math inline">\([X_1|Z_1]\)</span> (which I think we can reasonably assume to be <span class="math inline">\([X_1|Z_1=z]=z\)</span>), we can sequentially compute the Filtering distribution and thus the Forecasting distribution.</p>
+<p>This means, starting from an initial distribution <span class="math inline">\([X_1|Z_0]:=[X_1]\)</span> (which we will just have to assume, or assign a prior), we can sequentially compute the Filtering distribution and thus the Forecasting distribution: <span class="math inline">\([X_1|Z_1], [X_2|Z_1], [X_2|Z_{1:2}],\ldots,[X_t|\Omega_{t-1}]\)</span>.</p>
 </div>
 <div id="imputation-smoothing" class="section level3">
 <h3>Imputation (Smoothing)</h3>
