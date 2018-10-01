@@ -96,7 +96,7 @@ The first component in the integral is the AR(1) distribution, whereas the secon
 \]
 because of Bayes' Theorem.
 
-This means, assuming we have some starting value $[Z_0, X_0]$, we can sequentially compute the Filtering distribution and thus the Forecasting distribution.
+This means, assuming we have a starting distribution $[X_1|Z_1]$ (which I think we can reasonably assume to be $[X_1|Z_1=z]=z$), we can sequentially compute the Filtering distribution and thus the Forecasting distribution.
 
 ### Imputation (Smoothing)
 The imputation can likewise be done sequentially. The imputation step is just the smoothing step, and its distribution at time $t\leq T$ is
