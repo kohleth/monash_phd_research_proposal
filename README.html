@@ -126,12 +126,12 @@ $(document).ready(function () {
 </div>
 <div id="censored-time-series-forecasting-using-state-space-models" class="section level1">
 <h1>Censored Time Series Forecasting using State-Space Models</h1>
-<p>Most time series forecasting methods assume the observed data is uncensored. However, censored data can arise in many real life processes. For example, a business might wish to forecast the sales of a certain (physical) product using the sales history. However, if the product was out of stock for period of time, the sales history would have been capped (censored). In this example, proceeding with the usual forecasting method will likely lead to an under-prediction of the true future sales. This calls for method to model the time series which account for data censorship.</p>
+<p>Most time series forecasting methods assume the observed data is uncensored, that is, we observe the true value of the variable of interest. However, censored data can arise in many real life processes. For example, a business might wish to forecast the sales of a certain (physical) product using the sales history. However, if the product was out of stock for period of time, the sales history would have been capped (censored). In this example, proceeding with the usual forecasting method, thus treating the cesored value as the true value, will likely lead to an under-prediction of the true future sales. This calls for method to model the time series which account for this type of censored data.</p>
 <div id="current-state-of-research" class="section level2">
 <h2>Current state of research</h2>
 <div id="park-et.-al.-2007" class="section level4">
 <h4>Park et. al. (2007)</h4>
-<p>Park et. al. (2007) proposed an iterative scheme. First, the time series data is assumed to follow a multivariate gaussian distribution. Therefore, the censored portion of the time series could be imputed using the appropriate conditional distribution. Next, the parameters of the distribution are re-estimated. This process is repeated until convergence is reached.</p>
+<p>Park et. al. (2007) proposed an iterative scheme to estimate the model parameters. First, the time series data is assumed to follow a multivariate gaussian distribution. Therefore, the censored portion of the time series could be imputed using the appropriate conditional distribution. Next, the parameters of the distribution are re-estimated. This process is repeated until convergence is reached.</p>
 </div>
 <div id="wang-and-chan-2017" class="section level4">
 <h4>Wang and Chan (2017)</h4>
@@ -148,7 +148,7 @@ $(document).ready(function () {
 <p>We wish to approach this problem with three distinctive differences.</p>
 <div id="forecast-first" class="section level4">
 <h4>1. Forecast first</h4>
-<p>In many situations, it is the forecast, instead of model parameters, that is of primary interest. Therefore, we think we should shift the effort from adjusting parameter estimates to adjusting forecast (or the time series) directly.</p>
+<p>In many situations, it is the forecast, instead of model parameters, that is of primary interest. Therefore, we think we should shift the effort from estimating parameters to making forecast directly, using censored data.</p>
 </div>
 <div id="imputation-methods" class="section level4">
 <h4>2. Imputation methods</h4>
@@ -156,7 +156,7 @@ $(document).ready(function () {
 </div>
 <div id="state-space-models" class="section level4">
 <h4>3. State-Space Models</h4>
-<p>Data censorship can be modeled quite naturally if we adopt a state-space approach. In addition, both the imputation and forecast can be obtained quite naturally using sequential filtering, forecasting, and smoothing techniques that are well developed in the state-space literature.</p>
+<p>Data censorship can be modeled quite naturally if we adopt a state-space approach. In addition, both imputation (which becomes the problem of smoothing in this setting) and forecasting can be performed quite naturally using sequential filtering, forecasting, and smoothing techniques that are well developed in the state-space literature.</p>
 </div>
 </div>
 <div id="proposed-models" class="section level2">
@@ -184,7 +184,7 @@ $(document).ready(function () {
 <h4>Data model</h4>
 <p>This is where we model the censorship. But the formulation is highly problem-specific. In the case of sales / demand forecasting, which is what we are interested in, <span class="math inline">\(X_t\)</span> can be the real demand, and <span class="math inline">\(Z_t\)</span> be the actual sales. Formulated this way, the Data model could simply be <span class="math display">\[
   [Z_t|X_t, \theta, \Omega_{t-1}]=\min(X_t, C)
-\]</span> where <span class="math inline">\(C\in \theta\)</span> (the right censoring limit) is some constant physical constraint such as shelf space limit.</p>
+\]</span> where <span class="math inline">\(C\)</span> (the right censoring limit) is some constant physical constraint such as shelf space limit.</p>
 <p>We could extend this model further, for example, instead of a constant <span class="math inline">\(C\)</span>, we might have <span class="math inline">\(C_t\)</span> which represents the available stock at time <span class="math inline">\(t\)</span>. And then <span class="math display">\[
   C_t=C_0-Z_1-Z_2-\ldots-Z_{t-1}
 \]</span> where <span class="math inline">\(C_0\)</span> denotes some initial stock level.</p>
@@ -206,7 +206,7 @@ $(document).ready(function () {
 \]</span> The first component in the integral is the AR(1) distribution, whereas the second component is the Filtering distribution, where <span class="math display">\[
   [X_t|\Omega_t] \propto [Z_t|X_t][X_t|\Omega_{t-1}]
 \]</span> because of Bayes’ Theorem.</p>
-<p>This means, assuming we have some starting value <span class="math inline">\([Z_0, X_0]\)</span>, we can sequentially compute the Filtering distribution and thus the Forecasting distribution.</p>
+<p>This means, assuming we have a starting distribution <span class="math inline">\([X_1|Z_1]\)</span> (which I think we can reasonably assume to be <span class="math inline">\([X_1|Z_1=z]=z\)</span>), we can sequentially compute the Filtering distribution and thus the Forecasting distribution.</p>
 </div>
 <div id="imputation-smoothing" class="section level3">
 <h3>Imputation (Smoothing)</h3>
