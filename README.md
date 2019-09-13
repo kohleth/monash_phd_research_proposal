@@ -1,164 +1,48 @@
 # Monash PhD Research Proposal
 
-# Censored Time Series Forecasting using State-Space Models
+# Improving Intermittent Time Series Forecast by Pooling Information Across Groups
 
-Most time series forecasting methods assume the observed data is uncensored, that is, we observe the true value of the variable of interest. However, censored data can arise in many real life processes. For example, a business might wish to forecast the sales of a certain (physical) product using the sales history. However, if the product was out of stock for period of time, the sales history would have been capped (censored). In this example, proceeding with the usual forecasting method, thus treating the cesored value as the true value, will likely lead to an under-prediction of the true future sales. This calls for method to model the time series which account for this type of censored data.
+Forecasting intermittent time series has been challenging. Classical methods such as exponential smoothing or arima, and even dedicated models such as Croston's method (1972) often struggle to produce forecast that are  better than naive methods (e.g. using historical means, or random walk model). However, we observe that intermittent time series often (though not always) arise as part of a larger group of time series. For example, a retailer might wish to forecast the demand of each of their product at each of their store locations. Unless the product is a fast-moving item (e.g. milk), these series will typically be intermittent, but there will be many of them. Furthermore, while these base series often appear erratic, their aggregate (e.g. the demand of a product at the national level) often display modellable signal. We believe we can exploit these kind of relationship (i.e. pool information) to create better forecast.
 
 ## Current state of research
 
-#### Park et. al. (2007)
-Park et. al. (2007) proposed an iterative scheme to estimate the model parameters. First, the time series data is assumed to follow a multivariate gaussian distribution. Therefore, the censored portion of the time series could be imputed using the appropriate conditional distribution. Next, the parameters of the distribution are re-estimated. This process is repeated until convergence is reached.
+Here we summarize the relevant researches to date.
 
-#### Wang and Chan (2017)
-Wang and Chan (2017) studied AR models with exogenous variables and censoring. They assumed the score of the most recent uncensored data block, and its expectation givens the censored data has a closed form expression. Then, exploiting the fact that scores have zero mean, they form a set of estimating equations for the model parameters.
+#### Croston type method
+Croston et. al. (1972) proposed an innovative method to forecast intermittent time series. Specifically, the raw series is decomposed into two time series: that of the event (non-zero observation), and the time between successive events. Each of these series are non-intermittent, thus allowing classical forecast methods to be applied. After this, all that is left is to recombine the forecasts from both time series to produce the actual forecast. Since Croston's, variants have been proposed which correct the bias in the original method (Syntetos & Boylan (2001); Kostenkov & Hyndman (2005)). These methods do not provide interval estimate (because there is no distributional assumption) but they are nonetheless useful in practice.
 
-#### Schumacher et. al. (2017)
-Schumacher et. al. (2017) considered the same AR models with exogenous regressors and censoring. They used the EM algorithm to maximize the complete likelihood of both the observed data and the censoring indicator. To circumvent the difficulty in calculating the expectation, they approximate it using simulated data.
+#### INGARCH
+Regression approach to this problem is best exemplified by the INGARCH type model (Ferland et. al. 2006). Noting that most often intermittent series are time series of count, one can use generalized linear model (possison or negative binomial family) to model such data. The glm framework opens the door for regression against covariates, although in the time series setting these covariates are typically lagged version of the observation or parameter, and ARMA type error.
 
-## Research Gap
-As can be seen, current research mostly tackle the problem of parameter estimation in the presence of censored data, and they typically work directly with the ARIMA(X) model and pay little attention to the censoring mechanism.
+#### Hierarchical times series
+While Croston's and INGARCH type model attempt to extract as much information from the time series itself, hierarchical time series seek to borrow strength from neighbouring series. Hyndman et. al. (2011) proposed regression based method to reconcile the forecasts in the hierarchy, and these methods in theory also improve the forecast. Athanasopolous et. al. (2016) applied the same method but to temporal hierarchy (aggregate) instead and also reported gain in forecast accuracy. 
 
-We wish to approach this problem with three distinctive differences.
+An alternative method of exploting the temporal aggregate for forecasting, especially with intermittent series, is proposed by Petropoulos & Kourentzes (2015), where they use exponential smoothing to forecast at the aggregated level, before decomposing it back to the base level.
 
-#### 1. Forecast first
-In many situations, it is the forecast, instead of model parameters, that is of primary interest. Therefore, we think we should shift the effort from estimating parameters to making forecast directly, using censored data.
+#### Gaussian-Cox process
+A Cox process is essentially a (inhomogenous) poisson process where the intensity (rate parameter) is itself a stochastic process. A Gaussian-Cox process is a poisson process where the stochastic intensity parameter  is a gaussian process. Although more commonly used in spatial statistics (specifically point process model), it can be adopted to intermittent times series forecast as well. In particular, the Cox (poisson) component can be used to model the time series of count, with the intensity parameter modelled at the aggregated level using classical time series methods (which naturally produces a gaussian process). While these methods often result in in-tractable likelihood models (Adams et. al. 2009), advances in simulation base method (Teng et. al. 2017) can alleviate the problem at the expense of a heavier computation burden.
 
-#### 2. Imputation methods
-In addition to developing a full solution which forecasts in the presence of data censorship, it can be useful to develop an imputation only method. That is, a model that simply adjust the past censored data, so that the data analyst / statistician can proceed the modelling with the standard uncensored approach.
+#### Forecastability
+There has been limited research to date on this topic -- at what point (what level of intermittent-ness) do we conclude that  there is just no (non-trivial) way of forecasting the series? 
 
-#### 3. State-Space Models
-Data censorship can be modeled quite naturally if we adopt a state-space approach. In addition, both imputation (which becomes the problem of smoothing in this setting) and forecasting can be performed quite naturally using sequential filtering, forecasting, and smoothing techniques that are well developed in the state-space literature.
-
-## Proposed Models
-Let $\theta$, $X_t$, and $Z_t$ be the model parameters, process value, and observed value (i.e. data) at time $t$ respectively. Further denote $\Omega_t$ to be the history of observation until time $t$, that is $\Omega_t=\{Z_i\}_{i=1\ldots t}$.
-
-If we assume a full Bayesian approach, we can assign distributional assumption to all components. Then the full model of everything, given what we have observed is
-\[
-  [Z_t, X_t, \theta | \Omega_{t-1}]
-\]
-where $[.]$ denotes a distribution.
-
-This full distribution can be broken down into
-\[
-  [Z_t, X_t, \theta | \Omega_{t-1}]
-  =[Z_t|X_t, \theta, \Omega_{t-1}]
-  [X_t|\theta, \Omega_{t-1}]
-  [\theta|\Omega_{t-1}]
-\]
-
-where the 3 components on the RHS of the equations are the *data model*, *process model*, and *parameter model* respectively. We largely borrow this framework from Cressie & Wikle (2011).
-
-#### Parameter model
-If we don't want a fully Bayesian approach, we can simply replace the parameter model with some form of a plug-in estimate of $\theta$. Otherwise, it can come from some standard prior distribution.
-
-#### Process model
-This can be the standard uncensored model such as ARIMAX.
-
-#### Data model
-This is where we model the censorship. But the formulation is highly problem-specific. In the case of sales / demand forecasting, which is what we are interested in, $X_t$ can be the real demand, and $Z_t$ be the actual sales. Formulated this way, the Data model could simply be
-\[
-  [Z_t|X_t, \theta, \Omega_{t-1}]=\min(X_t, C)
-\]
-where $C$ (the right censoring limit) is some constant physical constraint such as shelf space limit.
-
-We could extend this model further, for example, instead of a constant $C$, we might have $C_t$ which represents the available stock at time $t$. And then
-\[
-  C_t=C_0-Z_1-Z_2-\ldots-Z_{t-1}
-\]
-where $C_0$ denotes some initial stock level.
-
-We could further introduce other complication such as random stock loss due to theft or write-off:
-\[
-  [Z_t|X_t, \theta, \Omega_{t-1}]=\min(X_t, \phi C)
-\]
-
-Or perhaps the case when not all demand is fulfilled,
-\[
-  [Z_t|X_t, \theta, \Omega_{t-1}]=\min(\psi X_t, \phi C)
-\]
-
-where $\phi,\psi \in \theta$ and $\phi, \psi \in [0,1]$.
-
-This is just a sample of possible extension. The potential is great.
-
-### Forecasting (and Filtering)
-With the model formulated, we can use the typical technique adopted in the state-space models, which is to do the forecast sequentially.
-
-For example, for notational simplicity, suppose the process model is AR(1).
-
-Then the Forecasting distribution becomes
-\[
-  [X_t|\Omega_{t-1}]=\int{[X_t|X_{t-1}][X_{t-1}|\Omega_{t-1}]}dX_{t-1}
-\]
-The first component in the integral is the AR(1) distribution, whereas the second component is the Filtering distribution, where
-\[
-  [X_t|\Omega_t] \propto [Z_t|X_t][X_t|\Omega_{t-1}]
-\]
-because of Bayes' Theorem.
-
-This means, starting from an initial distribution $[X_1|Z_0]:=[X_1]$ (which we will just have to assume, or assign a prior), we can sequentially compute the Filtering distribution and thus the Forecasting distribution: $[X_1|Z_1], [X_2|Z_1], [X_2|Z_{1:2}],\ldots,[X_t|\Omega_{t-1}]$.
-
-### Imputation (Smoothing)
-The imputation can likewise be done sequentially. The imputation step is just the smoothing step, and its distribution at time $t\leq T$ is
-\[
-  [X_t|\Omega_T]=\int{[X_t|X_{t+1},\Omega_T][X_{t+1}|\Omega_T]}dX_{t+1}
-\]
-where
-\[
-  [X_t|X_{t+1},\Omega_T]=[X_t|X_{t+1},\Omega_t]
-  \propto [X_{t+1}|X_t][X_t|\Omega_t]
-\]
-where the right-most relationship holds because again of Bayes' Theorem.
-
-This means, again, starting from the end of time $T$, we can sequentially obtain the Imputation (Smoothing) distribution by doing filtering and applying the process model.
-
-## Computation
-Since our Data model is non-linear, it is likely that we will have to go down the simulation path. We could use Approximate Bayesian Computation to facilitate this step.
-
-## Forecast evaluation
-We focus on probabilistic scoring rule, specifically the Continuous Ranked Probability Score (CRPS).
-
-For the data forecast, the score between forecast distribution $\hat{F}_{Z_t}$ and observation $z_t$ is
-\[
-  \text{CRPS}(\hat{F}_{Z_t},z_t)=\int_{-\infty}^\infty\left( \hat{F}_{Z_t}(u)-\mathbb{1}(u\geq z_t)\right)^2du
-\]
-where $\mathbb{1}$ is the indicator function.
-
-For the process variable forecast, the CRPS is likewise
-\[
-  \int_{-\infty}^\infty\left( \hat{F}_{X_t}(u)-\mathbb{1}(u\geq x_t)\right)^2du
-\]
-except that we do not observe $x_t$.
-
-However, in our context where $Z=\min(X,C)$, we have $x_t=z_t$ whenever $z_t\leq C$, and thus $F_{X_t}(u)=F_{Z_t}(u)$ whenever $u\leq C$. This last relationship motivates us to replace $\mathbb{1}(u\geq x_t)$ with $\mathbb{1}(u\geq z_t)$ in the region where $u\leq C$. So we can modify CRPS to be
-\[
-  \text{CRPS}(\hat{F}_{X_t},x_t)=\int_{-\infty}^C\left( \hat{F}_{X_t}(u)-\mathbb{1}(u\geq z_t)\right)^2du
-\]
-And $C$ can be replaced by $C_t$ or $\phi C_t$ depending on the Data model.
-
-## Application
-As demonstrated above, the formulation for state-space models are typically high problem-specific. In this research, we chiefly aim to develop practical forecasting solution for sales / demand data.
-
-As such, we will try to obtain real sales data (where we know some data is censored) from a large national retailer, so that we can evaluate our solution in a real life situation.
+In the context of choosing between Croston's method and its variant, Syntetos & Boylan (2001), and Kostenkov & Hyndman (2005) came up with guidelines based on the coefficient of variation of the non-zero part of the seires, as well as its inter-event interval. In the field of supply chain management, there is also XYZ analysis which attempts to quantify the forecastability of a times series by its coefficient of variation. With the exception of Petropoulos & Kourentzes (2015), all these attempts only look at the forecastability of the series by itself, instead of in the context of a group of series with shareable information. Therefore, it calls for a deeper investigation.
 
 
+## Research plan
+We believe we can contribute to the body of knkowledge in two areas:
 
-## Research Plan
-1. Review literature on
-    - Time series forecasting
-    - Censored / Missing data modeling
-    - State-Space models
-    - Approximate Bayesian Computation
-2. Develop computation algorithms with basic parameter, process, and data models.
-3. Develop forecast evaluation technique under data censorship.
-4. Further develop / extend models to cater for more realistic settings.
-5. Subject to progress of previous steps, develop software package to implement the developed methods.
+#### Forecastability
+Essentially, we seek to find ways to determinte whether a time series is forecastable (by non-trivial method). Such rules would be useful in situation where a large number of time series needs to be modelled, since they can be used as a screening test to save model time. To achieve this we need to expand existing research beyond just looking at Croston type method to also include hierarchical forecasting methods as well. We will also need to seek better quantification of intermittent-ness and forecastability beyond simply the coefficient of variation, and the inter-event time interval.
 
-## Bibliography
-Cressie, N. and Wikle, C. (2011). *Statistics for Spatio-Temporal Data*. Hoboken, N.J.: Wiley.
+If successful, we can also use this to determine the regions / space of time series where, by themselves they are not forecastable, but when information are pooled they become admissable. And all following research will concentrate in this space.
 
-Park, J., Genton, M., & Ghosh, S. (2007). Censored time series analysis with autoregressive moving average models. *Canadian Journal Of Statistics*, 35(1), 151-168. doi: 10.1002/cjs.5550350113
+#### Improving intermittent time series forecast by pooling information across groups
+We can think of three broad ways of tackling this problem. The first two will probably fail but since this is research we should try all and fail fast.
 
-Schumacher, F., Lachos, V., & Dey, D. (2017). Censored regression models with autoregressive errors: A likelihood-based perspective. *Canadian Journal Of Statistics*, 45(4), 375-392. doi: 10.1002/cjs.11338
+1. Hierarchical croston -- can we pool information in the non-zero demand series and the inter-event time interval series? Natually if we can see the aggregated series peaking, we should expect a higher non-zero demand, and shorter inter-event time interval at the base level.
 
-Wang, C., & Chan, K. (2017). Quasi-Likelihood Estimation of a Censored Autoregressive Model With Exogenous Variables. *Journal Of The American Statistical Association*, 1-11. doi: 10.1080/01621459.2017.1307115
+2. Integer-programming -- instead of using regression to pool information, we use integer programming with a suitable cost function. This will at least respect the count nature of the problem, but it is unclear whether it will actually help the forecast. This is an extension of the GTOP method of van Erven & Cugliari (2015) with the addition of an integer constraint.
+
+3. Gaussian-Cox process -- we see this as an amalgamation of hierarchical forecasting and INGARCH. Reiterating the paragraph above, suppose we can produce reasonably accurate forecast at the aggregate level using classical methods (producing a gaussian estimate), this can feed into the intensity parameter of the possion distribution at the base level. The difficulty of doing this is in balancing the contribution of this information with that from the series itself (i.e. the lagged covariates). This might mean we need to introduce additional weight parameter. The computation aspect can be handle by bayesian computation.
+
+We shall point out that in this research our primary concern is in improving forecast accuracy, not reconciliating forecast. Therefore, we will venture beyond the space of aggregate-consistent forecast methods. And since we are not reconciliating forecast, we do not necessarily need forecasts from all aggregation level in the model. This opens up a further research question -- can we only consider a subset of all aggregation level when pooling information? If so, how can we determine these levels?
